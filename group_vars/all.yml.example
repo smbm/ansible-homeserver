@@ -1,0 +1,18 @@
+---
+enable_pihole: 'yes'
+enable_zigbee2mqtt: 'no'
+enable_homeassistant: 'yes'
+
+global_ipv4: 10.10.10.230
+global_ipv6: fd2e:a775:400f:4b18:dea6:32ff:fe66:1521
+
+ipv6_prefix_for_docker: fd2e
+
+domain: domain.co.uk
+
+certbot_cloudflare_api_token: REDACTED
+certbot_cloudflare_email: email@gmail.com
+
+pihole_image: pihole/pihole:2022.01.1
+
+ruckus_ip: 10.10.1.103

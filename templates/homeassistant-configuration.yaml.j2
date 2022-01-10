@@ -1,0 +1,16 @@
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+homeassistant:
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.16.0.0/12
+
+logger:
+  default: warning
+#   logs:
+#     homeassistant.components.homekit: debug
+#     pyhap: debug

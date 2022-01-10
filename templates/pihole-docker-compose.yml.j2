@@ -1,0 +1,60 @@
+version: "2.1"
+services:
+  cm_cloudflared:
+    image: crazymax/cloudflared:latest
+    container_name: cloudflared
+    ports:
+      - "5053:5053/udp"
+    environment:
+      - "TZ=Europe/London"
+      - "TUNNEL_DNS_UPSTREAM=https://1.1.1.1/dns-query,https://1.0.0.1/dns-query,https://[2606:4700:4700::1111]/dns-query,https://[2606:4700:4700::1001]/dns-query"
+    restart: unless-stopped
+    networks:
+      pihole4:
+        ipv4_address: 10.53.53.53
+      pihole6:
+        ipv6_address: {{ ipv6_prefix_for_docker }}:40ee::53
+    sysctls:
+        - net.ipv6.conf.all.disable_ipv6=0
+
+  pihole:
+    container_name: pihole
+    image: {{ pihole_image }}
+    hostname: pihole
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8888:80/tcp"
+    environment:
+      - TZ=Europe/London
+      - WEBPASSWORD=letmein
+      - IPv6=true
+      - ServerIP={{ global_ipv4 }}
+      - ServerIPv6={{ global_ipv6 }}
+      - DNS1=10.53.53.53#5053
+    networks:
+        pihole4:
+          ipv4_address: 10.53.53.80
+        pihole6:
+          ipv6_address: {{ ipv6_prefix_for_docker }}:40ee::80
+    # Volumes store your data between container upgrades
+    volumes:
+      - './etc-pihole/:/etc/pihole/'
+      - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
+    dns: 1.1.1.1
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    restart: unless-stopped
+
+networks:
+  pihole4:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.53.53.0/24
+  pihole6:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: {{ ipv6_prefix_for_docker }}:40ee::/64

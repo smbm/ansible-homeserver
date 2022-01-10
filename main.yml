@@ -1,0 +1,523 @@
+---
+- hosts: all
+  gather_facts: yes
+
+  handlers:
+    - name: unlink resolv dot conf
+      file:
+        path: "/etc/resolv.conf"
+        state: absent
+      become: yes
+      notify:
+        - recreate resolv.conf
+
+    - name: recreate resolv.conf
+      copy:
+        dest: "/etc/resolv.conf"
+        owner: root
+        group: root
+        content: |
+          nameserver 1.1.1.1
+      become: yes
+
+    - name: restart docker
+      systemd:
+        name: docker.service
+        state: restarted
+      become: yes
+
+    - name: restart cups
+      systemd:
+        name: cups.service
+        state: restarted
+      become: yes
+
+    - name: set plugin containment
+      command: snap set certbot trust-plugin-with-root=ok
+      become: yes
+
+    - name: reload nginx
+      systemd:
+        name: nginx.service
+        state: reloaded
+      become: yes
+
+    - name: restart pihole
+      community.general.docker_compose:
+        project_src: /opt/pihole/
+        state: present
+        restarted: 'yes'
+        services:
+          - pihole
+
+  tasks:
+    - name: Ping
+      ping:
+
+    - name: Apt install deps
+      apt:
+        update_cache: yes
+        name:
+          - python3-pip
+          - apt-transport-https
+          - ca-certificates
+          - gnupg-agent
+          - curl
+          - software-properties-common
+          - nginx
+          - cups
+          - avahi-daemon
+          - gcc
+          - g++
+          - make
+          - python
+          - net-tools
+          - pi-bluetooth
+          - bluetooth
+          - bluez
+          - libbluetooth-dev
+          - libudev-dev
+          - printer-driver-brlaser
+        state: present
+      become: yes
+
+    - name: Disable resolved
+      systemd:
+        name: systemd-resolved
+        state: stopped
+        enabled: no
+      become: yes
+      notify:
+        - unlink resolv dot conf
+
+    - meta: flush_handlers
+
+    - name: Add hostname to hosts file
+      lineinfile:
+        path: /etc/hosts
+        line: 127.0.0.1 {{ ansible_facts['hostname'] }}
+      become: yes
+
+# Homebridge
+
+    - name: Install Nodesource GPG key
+      apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+        state: present
+      become: yes
+      when: enable_homebridge == 'yes'
+
+    - name: Add Nodesource repo
+      apt_repository:
+        repo: deb [arch=arm64] https://deb.nodesource.com/node_16.x focal main
+        filename: nodesource
+        state: present
+      become: yes
+      when: enable_homebridge == 'yes'
+
+    - name: Install Node 16.x
+      apt:
+        update_cache: yes
+        name:
+          - nodejs
+      become: yes
+      when: enable_homebridge == 'yes'
+
+    - name: Install "homebridge" node.js package.
+      community.general.npm:
+        name: homebridge
+        global: yes
+        unsafe_perm: yes
+      become: yes
+      when: enable_homebridge == 'yes'
+
+    - name: Install "homebridge-config-ui-x" node.js package.
+      community.general.npm:
+        name: homebridge-config-ui-x
+        global: yes
+        unsafe_perm: yes
+      become: yes
+      when: enable_homebridge == 'yes'
+
+    - name: Install Homebridge service and create admin user
+      command: hb-service install --user homebridge
+      become: yes
+      args:
+        creates: /var/lib/homebridge/config.json
+      when: enable_homebridge == 'yes'
+
+# Docker
+
+    - name: Install Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      become: yes
+
+    - name: Add Docker repo
+      apt_repository:
+        repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu focal stable
+        filename: docker
+        state: present
+      become: yes
+
+    - name: Install Docker
+      apt:
+        update_cache: yes
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+      become: yes
+
+    - name: Add tvetterlein to docker group
+      user:
+        name: tvetterlein
+        groups: docker
+        append: yes
+      become: yes
+
+    - name: create docker daemon.json
+      copy:
+        dest: "/etc/docker/daemon.json"
+        owner: root
+        group: root
+        content: |
+          {
+            "ipv6": true,
+            "fixed-cidr-v6": "{{ ipv6_prefix_for_docker }}:40ed::/64"
+          }
+      become: yes
+      notify:
+        - restart docker
+
+    - meta: flush_handlers
+
+# Certbot
+
+    - name: Install certbot with option --classic
+      snap:
+        name:
+          - certbot
+        classic: yes
+        state: present
+      become: yes
+      notify: set plugin containment
+
+    - meta: flush_handlers
+
+    - name: Install cloudflare plugin snap
+      snap:
+        name:
+          - certbot-dns-cloudflare
+        state: present
+      become: yes
+
+    - name: Symlink certbot
+      file:
+        src: /snap/bin/certbot
+        dest: /usr/bin/certbot
+        owner: root
+        group: root
+        state: link
+      become: yes
+
+    - name: create secrets dir
+      file:
+        dest: /home/tvetterlein/.secrets/certbot/
+        state: directory
+        owner: tvetterlein
+        group: tvetterlein
+
+    - name: create certbot creds file
+      copy:
+        dest: "/home/tvetterlein/.secrets/certbot/cloudflare.ini"
+        owner: tvetterlein
+        group: tvetterlein
+        content: |
+          dns_cloudflare_api_token = {{ certbot_cloudflare_api_token }}
+        mode: '0700'
+
+    - name: get abides wildcard cert
+      command: certbot certonly --dns-cloudflare --dns-cloudflare-credentials /home/tvetterlein/.secrets/certbot/cloudflare.ini --quiet --non-interactive --agree-tos --email {{ certbot_cloudflare_email }} -d *.{{ domain }}
+      become: yes
+      args:
+        creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
+
+# Docker Compose
+
+    - name: Install pip docker-compose
+      pip:
+        name:
+          docker-compose
+
+# Zigbee2Mqtt
+
+    - name: create zigbee2mqtt opt dir
+      file:
+        dest: /opt/zigbee2mqtt/
+        state: directory
+        owner: root
+        group: root
+      become: yes
+
+    - name: create zigbee2mqtt-data dir
+      file:
+        dest: /opt/zigbee2mqtt/zigbee2mqtt-data
+        state: directory
+        owner: root
+        group: root
+      become: yes
+
+    - name: Copy zigbee2mqtt config file
+      template:
+        src: zigbee2mqtt-configuration.yaml.j2
+        dest: /opt/zigbee2mqtt/zigbee2mqtt-data/configuration.yaml
+        owner: root
+        group: root
+        mode: '0644'
+        force: no
+      become: yes
+
+    - name: Copy docker compose file
+      template:
+        src: zigbee2mqtt-docker-compose.yml.j2
+        dest: /opt/zigbee2mqtt/docker-compose.yml
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+
+    - name: docker compose up zigbee2mqtt
+      community.general.docker_compose:
+        project_src: /opt/zigbee2mqtt/
+        state: present
+      when: enable_zigbee2mqtt == 'yes'
+
+# HomeAssistant
+
+    - name: create homeassistant opt dir
+      file:
+        dest: /opt/homeassistant/
+        state: directory
+        owner: root
+        group: root
+      become: yes
+
+    - name: create homeassistant-data dir
+      file:
+        dest: /opt/homeassistant/homeassistant-data
+        state: directory
+        owner: root
+        group: root
+      become: yes
+
+    - name: Copy zigbee2mqtt config file
+      template:
+        src: homeassistant-configuration.yaml.j2
+        dest: /opt/homeassistant/homeassistant-data/configuration.yaml
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+
+    - name: Copy docker compose file
+      template:
+        src: homeassistant-docker-compose.yml.j2
+        dest: /opt/homeassistant/docker-compose.yml
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+
+    - name: docker compose up homeassistant
+      community.general.docker_compose:
+        project_src: /opt/homeassistant/
+        state: present
+      when: enable_homeassistant == 'yes'
+
+# PiHole
+
+    - name: create pihole opt dir
+      file:
+        dest: /opt/pihole/
+        state: directory
+        owner: root
+        group: root
+      become: yes
+
+    - name: Copy docker compose file
+      template:
+        src: pihole-docker-compose.yml.j2
+        dest: /opt/pihole/docker-compose.yml
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+
+    - name: docker compose up pihole
+      community.general.docker_compose:
+        project_src: /opt/pihole/
+        state: present
+      when: enable_pihole == 'yes'
+
+    - name: pihole custom domains
+      template:
+        src: pihole-custom-list.j2
+        dest: /opt/pihole/etc-pihole/custom.list
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: restart pihole
+
+    - meta: flush_handlers
+
+# CUPS
+
+    - name: Add tvetterlein to lpadmin group
+      user:
+        name: tvetterlein
+        groups: lpadmin
+        append: yes
+      become: yes
+
+    - name: Copy cupsd conf file
+      template:
+        src: cupsd-conf.j2
+        dest: /etc/cups/cupsd.conf
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: restart cups
+
+# NGINX for reverse proxying everything
+
+    - name: unlink nginx default
+      file:
+        path: "/etc/nginx/sites-enabled/default"
+        state: absent
+      become: yes
+      notify:
+        - reload nginx
+
+    - name: Copy pihole nginx conf file
+      template:
+        src: pihole-nginx-conf.j2
+        dest: /etc/nginx/sites-available/pihole
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: reload nginx
+
+    - name: Symlink pihole nginx conf
+      file:
+        src: /etc/nginx/sites-available/pihole
+        dest: /etc/nginx/sites-enabled/pihole
+        owner: root
+        group: root
+        state: link
+      become: yes
+      notify: reload nginx
+
+    - name: Copy homebridge nginx conf file
+      template:
+        src: homebridge-nginx-conf.j2
+        dest: /etc/nginx/sites-available/homebridge
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: reload nginx
+
+    - name: Symlink homebridge nginx conf
+      file:
+        src: /etc/nginx/sites-available/homebridge
+        dest: /etc/nginx/sites-enabled/homebridge
+        owner: root
+        group: root
+        state: link
+      become: yes
+      notify: reload nginx
+
+    - name: Copy ruckus nginx conf file
+      template:
+        src: ruckus-nginx-conf.j2
+        dest: /etc/nginx/sites-available/ruckus
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: reload nginx
+
+    - name: Symlink ruckus nginx conf
+      file:
+        src: /etc/nginx/sites-available/ruckus
+        dest: /etc/nginx/sites-enabled/ruckus
+        owner: root
+        group: root
+        state: link
+      become: yes
+      notify: reload nginx
+
+    - name: Copy cups nginx conf file
+      template:
+        src: cups-nginx-conf.j2
+        dest: /etc/nginx/sites-available/cups
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: reload nginx
+
+    - name: Symlink cups nginx conf
+      file:
+        src: /etc/nginx/sites-available/cups
+        dest: /etc/nginx/sites-enabled/cups
+        owner: root
+        group: root
+        state: link
+      become: yes
+      notify: reload nginx
+
+    - name: Copy zigbee2mqtt nginx conf file
+      template:
+        src: zigbee2mqtt-nginx-conf.j2
+        dest: /etc/nginx/sites-available/zigbee2mqtt
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: reload nginx
+
+    - name: Symlink zigbee2mqtt nginx conf
+      file:
+        src: /etc/nginx/sites-available/zigbee2mqtt
+        dest: /etc/nginx/sites-enabled/zigbee2mqtt
+        owner: root
+        group: root
+        state: link
+      become: yes
+      notify: reload nginx
+
+    - name: Copy homeassistant nginx conf file
+      template:
+        src: homeassistant-nginx-conf.j2
+        dest: /etc/nginx/sites-available/homeassistant
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: reload nginx
+
+    - name: Symlink homeassistant nginx conf
+      file:
+        src: /etc/nginx/sites-available/homeassistant
+        dest: /etc/nginx/sites-enabled/homeassistant
+        owner: root
+        group: root
+        state: link
+      become: yes
+      notify: reload nginx
