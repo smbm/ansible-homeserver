@@ -1,0 +1,30 @@
+---
+
+- name: Apt install cups
+  apt:
+    update_cache: yes
+    name:
+      - cups
+      - printer-driver-brlaser
+    state: present
+  become: yes
+  when: enable_cups == 'yes'
+
+- name: Add current user to lpadmin group
+  user:
+    name: "{{ ansible_facts['user_id'] }}"
+    groups: lpadmin
+    append: yes
+  become: yes
+  when: enable_cups == 'yes'
+
+- name: Copy cupsd conf file
+  template:
+    src: cupsd-conf.j2
+    dest: /etc/cups/cupsd.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart cups
+  when: enable_cups == 'yes'

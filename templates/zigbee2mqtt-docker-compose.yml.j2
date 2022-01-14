@@ -18,8 +18,8 @@ services:
       - ./zigbee2mqtt-data:/app/data
       - /run/udev:/run/udev:ro
     ports:
-      - 8080:8080
+      - 8082:8082
     environment:
-      - TZ=Europe/Berlin
+      - TZ=Europe/London
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0

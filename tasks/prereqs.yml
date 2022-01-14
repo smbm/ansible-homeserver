@@ -1,0 +1,55 @@
+---
+
+- name: Apt install deps
+  apt:
+    update_cache: yes
+    name:
+      - python3-pip
+      - apt-transport-https
+      - ca-certificates
+      - gnupg-agent
+      - curl
+      - software-properties-common
+      - nginx
+      - avahi-daemon
+      - gcc
+      - g++
+      - make
+      - python
+      - net-tools
+    state: present
+  become: yes
+
+- name: Apt install bluetooth deps (will reboot afterwards changed)
+  apt:
+    update_cache: yes
+    name:
+      - pi-bluetooth
+      - bluetooth
+      - bluez
+      - libbluetooth-dev
+      - libudev-dev
+    state: present
+  become: yes
+  notify: reboot
+
+- name: Flushing handlers
+  meta: flush_handlers
+
+- name: Disable resolved
+  systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: no
+  become: yes
+  notify:
+    - unlink resolv dot conf
+
+- name: Flushing handlers
+  meta: flush_handlers
+
+- name: Add hostname to hosts file
+  lineinfile:
+    path: /etc/hosts
+    line: 127.0.0.1 {{ ansible_facts['hostname'] }}
+  become: yes

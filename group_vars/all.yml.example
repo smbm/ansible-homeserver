@@ -1,18 +1,40 @@
 ---
+# Enable services and dependencies
 enable_pihole: 'yes'
-enable_zigbee2mqtt: 'no'
+enable_zigbee2mqtt: 'yes'
 enable_homeassistant: 'yes'
+enable_homebridge: 'no'
+# To do: NGINX may not work correctly without certbot at this stage due to the conf files having certs listed
+enable_nginx: 'yes'
+enable_certbot: 'yes'
+enable_cups: 'yes'
+enable_ruckus: 'yes'
 
+# Docker networking info - these should be set to the IPv4 and IPv6 addresses for your server
 global_ipv4: 10.10.10.230
-global_ipv6: fd2e:a775:400f:4b18:dea6:32ff:fe66:1521
-
+global_ipv6: fd2e::1521
 ipv6_prefix_for_docker: fd2e
 
-domain: domain.co.uk
+# Domain for cert and reverse proxying
+domain: domain.tld
 
-certbot_cloudflare_api_token: REDACTED
-certbot_cloudflare_email: email@gmail.com
+# Certbot credentials
+certbot_cloudflare_api_token: <your cloudflare api key for DNS-01>
+certbot_cloudflare_email: your_cloudflare_email@domain.tld
 
+# Pihole docker image
 pihole_image: pihole/pihole:2022.01.1
 
-ruckus_ip: 10.10.1.103
+# Ruckus IP for the management IF of you WAP
+ruckus_ip: 10.10.10.240
+
+# Homeassistant config custom block
+homeassistant_custom_block: |
+  # Your custom config goes here
+
+# zigbee2mqtt config custom block for advanced flags
+zigbee2mqtt_custom_block: |
+  advanced:
+    network_key: GENERATE
+    pan_id: 6755
+    channel: 11

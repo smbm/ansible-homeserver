@@ -1,0 +1,64 @@
+---
+
+- name: unlink resolv dot conf
+  file:
+    path: "/etc/resolv.conf"
+    state: absent
+  become: yes
+  notify:
+    - recreate resolv.conf
+
+- name: recreate resolv.conf
+  copy:
+    dest: "/etc/resolv.conf"
+    owner: root
+    group: root
+    content: |
+      nameserver 1.1.1.1
+  become: yes
+
+- name: restart docker
+  systemd:
+    name: docker.service
+    state: restarted
+  become: yes
+
+- name: restart cups
+  systemd:
+    name: cups.service
+    state: restarted
+  become: yes
+
+- name: set cerbot plugin containment
+  command: snap set certbot trust-plugin-with-root=ok
+  become: yes
+
+- name: reload nginx
+  systemd:
+    name: nginx.service
+    state: reloaded
+  become: yes
+
+- name: restart pihole
+  community.general.docker_compose:
+    project_src: /opt/pihole/
+    state: present
+    restarted: 'yes'
+    services:
+      - pihole
+
+- name: restart homeassistant
+  community.general.docker_compose:
+    project_src: /opt/homeassistant/
+    state: present
+    restarted: 'yes'
+    services:
+      - homeassistant
+
+- name: restart zigbee2mqtt
+  community.general.docker_compose:
+    project_src: /opt/zigbee2mqtt/
+    state: present
+    restarted: 'yes'
+    services:
+      - zigbee2mqtt

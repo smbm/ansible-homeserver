@@ -1,0 +1,57 @@
+---
+
+- name: Install certbot with option --classic
+  snap:
+    name:
+      - certbot
+    classic: yes
+    state: present
+  become: yes
+  notify: set plugin containment
+  when: enable_certbot == 'yes'
+
+- name: Flushing handlers
+  meta: flush_handlers
+
+- name: Install cloudflare plugin snap
+  snap:
+    name:
+      - certbot-dns-cloudflare
+    state: present
+  become: yes
+  when: enable_certbot == 'yes'
+
+- name: Symlink certbot
+  file:
+    src: /snap/bin/certbot
+    dest: /usr/bin/certbot
+    owner: root
+    group: root
+    state: link
+  become: yes
+  when: enable_certbot == 'yes'
+
+- name: create secrets dir
+  file:
+    dest: "/home/{{ ansible_facts['user_id'] }}/.secrets/certbot/"
+    state: directory
+    owner: "{{ ansible_facts['user_id'] }}"
+    group: "{{ ansible_facts['user_id'] }}"
+  when: enable_certbot == 'yes'
+
+- name: create certbot creds file
+  copy:
+    dest: "/home/{{ ansible_facts['user_id'] }}/.secrets/certbot/cloudflare.ini"
+    owner: "{{ ansible_facts['user_id'] }}"
+    group: "{{ ansible_facts['user_id'] }}"
+    content: |
+      dns_cloudflare_api_token = {{ certbot_cloudflare_api_token }}
+    mode: '0700'
+  when: enable_certbot == 'yes'
+
+- name: get wildcard cert
+  command: "certbot certonly --dns-cloudflare --dns-cloudflare-credentials /home/{{ ansible_facts['user_id'] }}/.secrets/certbot/cloudflare.ini --quiet --non-interactive --agree-tos --email {{ certbot_cloudflare_email }} -d *.{{ domain }}"
+  become: yes
+  args:
+    creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
+  when: enable_certbot == 'yes'

@@ -1,0 +1,59 @@
+---
+
+- name: create homeassistant opt dir
+  file:
+    dest: /opt/homeassistant/
+    state: directory
+    owner: root
+    group: root
+  become: yes
+  when: enable_homeassistant == 'yes'
+
+- name: create homeassistant-data dir
+  file:
+    dest: /opt/homeassistant/homeassistant-data
+    state: directory
+    owner: root
+    group: root
+  become: yes
+  when: enable_homeassistant == 'yes'
+
+- name: Copy homeassistant config file
+  template:
+    src: homeassistant-configuration.yaml.j2
+    dest: /opt/homeassistant/homeassistant-data/configuration.yaml
+    owner: root
+    group: root
+    mode: '0644'
+    force: no
+  become: yes
+  when: enable_homeassistant == 'yes'
+
+- name: homeassistant config custom block
+  ansible.builtin.blockinfile:
+    path: /opt/homeassistant/homeassistant-data/configuration.yaml
+    insertafter: EOF
+    block: "{{ homeassistant_custom_block }}"
+    state: present
+  become: yes
+  notify: restart homeassistant
+  when: enable_homeassistant == 'yes'
+
+- name: Flushing handlers
+  meta: flush_handlers
+
+- name: Copy homeassistant docker compose file
+  template:
+    src: homeassistant-docker-compose.yml.j2
+    dest: /opt/homeassistant/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  when: enable_homeassistant == 'yes'
+
+- name: docker compose up homeassistant
+  community.general.docker_compose:
+    project_src: /opt/homeassistant/
+    state: present
+  when: enable_homeassistant == 'yes'
