@@ -37,6 +37,7 @@
       {{ (enable_zigbee2mqtt == 'yes') | ternary( global_ipv4 ~ ' z2m.' ~ domain , None) }}
       {{ (enable_homeassistant == 'yes') | ternary( global_ipv4 ~ ' ha.' ~ domain , None) }}
       {{ (enable_ruckus == 'yes') | ternary( global_ipv4 ~ ' ruckus.' ~ domain , None) }}
+      {{ (enable_erx == 'yes') | ternary( global_ipv4 ~ ' erx.' ~ domain , None) }}
     state: present
   become: yes
   notify: restart pihole

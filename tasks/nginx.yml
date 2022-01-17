@@ -142,5 +142,27 @@
   notify: reload nginx
   when: enable_homeassistant == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
+- name: Copy erx nginx conf file
+  template:
+    src: erx-nginx-conf.j2
+    dest: /etc/nginx/sites-available/erx
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: reload nginx
+  when: enable_erx == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
+
+- name: Symlink erx nginx conf
+  file:
+    src: /etc/nginx/sites-available/erx
+    dest: /etc/nginx/sites-enabled/erx
+    owner: root
+    group: root
+    state: link
+  become: yes
+  notify: reload nginx
+  when: enable_erx == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
+
 - name: Flushing handlers
   meta: flush_handlers

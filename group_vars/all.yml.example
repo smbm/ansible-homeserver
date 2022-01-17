@@ -9,6 +9,7 @@ enable_nginx: 'yes'
 enable_certbot: 'yes'
 enable_cups: 'yes'
 enable_ruckus: 'yes'
+enable_erx: 'yes'
 
 # Docker networking info - these should be set to the IPv4 and IPv6 addresses for your server
 global_ipv4: 10.10.10.230
@@ -27,6 +28,9 @@ pihole_image: pihole/pihole:2022.01.1
 
 # Ruckus IP for the management IF of you WAP
 ruckus_ip: 10.10.10.240
+
+# ERX IP
+erx_ip: 10.10.10.1
 
 # Homeassistant config custom block
 homeassistant_custom_block: |
