@@ -1,0 +1,65 @@
+---
+
+- name: create traefik opt dir
+  file:
+    dest: /opt/traefik/
+    state: directory
+    owner: root
+    group: root
+  become: yes
+  when: enable_traefik == 'yes'
+
+# - name: create adguard-conf dir
+#   file:
+#     dest: /opt/adguard/adguard-conf
+#     state: directory
+#     owner: root
+#     group: root
+#   become: yes
+#   when: enable_adguard == 'yes'
+
+# - name: create adguard-work dir
+#   file:
+#     dest: /opt/adguard/adguard-work
+#     state: directory
+#     owner: root
+#     group: root
+#   become: yes
+#   when: enable_adguard == 'yes'
+
+# - name: Copy zigbee2mqtt config file
+#   template:
+#     src: zigbee2mqtt-configuration.yaml.j2
+#     dest: /opt/zigbee2mqtt/zigbee2mqtt-data/configuration.yaml
+#     owner: root
+#     group: root
+#     mode: '0644'
+#     force: no
+#   become: yes
+#   when: enable_adguard == 'yes'
+
+# - name: zigbee2mqtt config advanced custom block
+#   ansible.builtin.blockinfile:
+#     path: /opt/zigbee2mqtt/zigbee2mqtt-data/configuration.yaml
+#     insertafter: EOF
+#     block: "{{ zigbee2mqtt_custom_block }}"
+#     state: present
+#   become: yes
+#   notify: restart zigbee2mqtt
+#   when: enable_zigbee2mqtt == 'yes'
+
+- name: Copy traefik docker compose file
+  template:
+    src: traefik-docker-compose.yml.j2
+    dest: /opt/traefik/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  when: enable_traefik == 'yes'
+
+- name: docker compose up traefik
+  community.general.docker_compose:
+    project_src: /opt/traefik/
+    state: present
+  when: enable_traefik == 'yes'

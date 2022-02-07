@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  traefik:
+    image: "traefik:v2.6"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      # - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      ipvlan232:
+        ipv4_address: 10.10.10.232
+      traefik:
+
+networks:
+  ipvlan232:
+    driver: ipvlan
+    ipam:
+      config:
+        - subnet: 10.10.10.0/24
+          gateway: 10.10.10.1
+    driver_opts:
+      ipvlan_mode: "l2"
+      parent: "eth0"
+  traefik:
+    driver: bridge
