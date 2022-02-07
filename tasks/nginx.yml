@@ -164,27 +164,27 @@
   notify: reload nginx
   when: enable_erx == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
-# - name: Copy adguard nginx conf file
-#   template:
-#     src: adguard-nginx-conf.j2
-#     dest: /etc/nginx/sites-available/adguard
-#     owner: root
-#     group: root
-#     mode: '0644'
-#   become: yes
-#   notify: reload nginx
-#   when: enable_adguard == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
+- name: Copy adguard nginx conf file
+  template:
+    src: adguard-nginx-conf.j2
+    dest: /etc/nginx/sites-available/adguard
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: reload nginx
+  when: enable_adguard == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
-# - name: Symlink adguard nginx conf
-#   file:
-#     src: /etc/nginx/sites-available/adguard
-#     dest: /etc/nginx/sites-enabled/adguard
-#     owner: root
-#     group: root
-#     state: link
-#   become: yes
-#   notify: reload nginx
-#   when: enable_adguard == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
+- name: Symlink adguard nginx conf
+  file:
+    src: /etc/nginx/sites-available/adguard
+    dest: /etc/nginx/sites-enabled/adguard
+    owner: root
+    group: root
+    state: link
+  become: yes
+  notify: reload nginx
+  when: enable_adguard == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
 - name: Flushing handlers
   meta: flush_handlers
