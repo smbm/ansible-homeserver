@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  adguard:
+    container_name: adguard
+    image: adguard/adguardhome:v0.107.3
+    labels:
+      - traefik.http.routers.adguard.rule=Host(`adg.abides.co.uk`)
+      - traefik.http.services.adguard.loadbalancer.server.port=3000
+    volumes:
+      - ./adguard-work:/opt/adguardhome/work
+      - ./adguard-conf:/opt/adguardhome/conf
+    restart: unless-stopped
+    ports:
+      - 5300:53/tcp
+      - 5300:53/udp
+      - 3000:3000/tcp
+#    networks:
+#      traefik_traefik:
+#
+#
+#networks:
+#  traefik_traefik:
+#    external: true
+#       adguard:
+#         ipv4_address: 10.10.10.231
+#
+# networks:
+#   adguard:
+#     driver: ipvlan
+#     ipam:
+#       config:
+#         - subnet: 10.10.10.0/24
+#           gateway: 10.10.10.1
+#     driver_opts:
+#       ipvlan_mode: "l2"
+#       parent: "eth0"

@@ -10,6 +10,7 @@ enable_certbot: 'yes'
 enable_cups: 'yes'
 enable_ruckus: 'yes'
 enable_erx: 'yes'
+enable_adguard: 'yes'
 
 # Docker networking info - these should be set to the IPv4 and IPv6 addresses for your server
 global_ipv4: 10.10.10.230
@@ -31,6 +32,9 @@ ruckus_ip: 10.10.10.240
 
 # ERX IP
 erx_ip: 10.10.10.1
+
+# Adguard
+adguard_image: adguard/adguardhome:v0.107.3
 
 # Homeassistant config custom block
 homeassistant_custom_block: |
