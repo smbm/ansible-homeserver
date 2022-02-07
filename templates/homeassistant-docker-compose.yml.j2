@@ -2,7 +2,7 @@ version: '3.8'
 services:
   homeassistant:
     container_name: homeassistant
-    image: "homeassistant/home-assistant:latest"
+    image: {{ homeassistant_image }}
     volumes:
       - ./homeassistant-data:/config
       - /etc/localtime:/etc/localtime:ro
@@ -10,5 +10,5 @@ services:
     network_mode: host
     #ports:
     #  - 8123:8123
-    devices:
-      - /dev/ttyAMA0:/dev/ttyAMA0
+    # devices:
+    #  - /dev/ttyAMA0:/dev/ttyAMA0

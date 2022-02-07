@@ -20,7 +20,7 @@
     state: present
   become: yes
 
-- name: Apt install bluetooth deps (will reboot afterwards changed)
+- name: Apt install bluetooth deps (will reboot afterwards if changes are made)
   apt:
     update_cache: yes
     name:

@@ -17,4 +17,5 @@
     - import_tasks: tasks/homeassistant.yml
     - import_tasks: tasks/pihole.yml
     - import_tasks: tasks/cups.yml
+    # - import_tasks: tasks/adguard.yml
     - import_tasks: tasks/nginx.yml

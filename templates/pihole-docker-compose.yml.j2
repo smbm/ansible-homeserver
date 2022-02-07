@@ -1,7 +1,7 @@
 version: "2.1"
 services:
   cm_cloudflared:
-    image: crazymax/cloudflared:latest
+    image: {{ cloudflared_image }}
     container_name: cloudflared
     ports:
       - "5053:5053/udp"

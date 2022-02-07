@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   mqtt:
-    image: eclipse-mosquitto:2.0
+    image: {{ mosquitto_image }}
     restart: unless-stopped
     volumes:
       - "./mosquitto-data:/mosquitto"
@@ -13,7 +13,7 @@ services:
   zigbee2mqtt:
     container_name: zigbee2mqtt
     restart: unless-stopped
-    image: koenkk/zigbee2mqtt
+    image: {{ zigbee2mqtt_image }}
     volumes:
       - ./zigbee2mqtt-data:/app/data
       - /run/udev:/run/udev:ro

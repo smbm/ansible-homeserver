@@ -38,6 +38,7 @@
       {{ (enable_homeassistant == 'yes') | ternary( global_ipv4 ~ ' ha.' ~ domain , None) }}
       {{ (enable_ruckus == 'yes') | ternary( global_ipv4 ~ ' ruckus.' ~ domain , None) }}
       {{ (enable_erx == 'yes') | ternary( global_ipv4 ~ ' erx.' ~ domain , None) }}
+      {{ (enable_adguard == 'yes') | ternary( global_ipv4 ~ ' adguard.' ~ domain , None) }}
     state: present
   become: yes
   notify: restart pihole
