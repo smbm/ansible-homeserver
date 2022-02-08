@@ -3,12 +3,24 @@ services:
   homeassistant:
     container_name: homeassistant
     image: {{ homeassistant_image }}
+    labels:
+      - traefik.http.routers.homeassistant.rule=Host(`hma.abides.co.uk`)
+      - traefik.http.services.homeassistant.loadbalancer.server.port=8123
     volumes:
       - ./homeassistant-data:/config
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
-    network_mode: host
-    #ports:
-    #  - 8123:8123
-    # devices:
-    #  - /dev/ttyAMA0:/dev/ttyAMA0
+    networks:
+      host:
+      traefik_traefik:
+      z2m:
+
+networks:
+  host:
+    name: host
+    external: true
+  z2m:
+    name: zigbee2mqtt_z2m
+    external: true
+  traefik_traefik:
+    external: true

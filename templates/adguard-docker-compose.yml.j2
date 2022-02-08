@@ -14,13 +14,15 @@ services:
       - 5300:53/tcp
       - 5300:53/udp
       - 3000:3000/tcp
-#    networks:
-#      traefik_traefik:
+    networks:
+      traefik_traefik:
+
+
+networks:
+  traefik_traefik:
+    external: true
 #
 #
-#networks:
-#  traefik_traefik:
-#    external: true
 #       adguard:
 #         ipv4_address: 10.10.10.231
 #

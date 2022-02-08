@@ -5,21 +5,36 @@ services:
     restart: unless-stopped
     volumes:
       - "./mosquitto-data:/mosquitto"
-    ports:
-      - "1883:1883"
-      - "9001:9001"
+    # ports:
+    #   - "1883:1883"
+    #   - "9001:9001"
+    networks:
+      z2m:
     command: "mosquitto -c /mosquitto-no-auth.conf"
 
   zigbee2mqtt:
     container_name: zigbee2mqtt
     restart: unless-stopped
     image: {{ zigbee2mqtt_image }}
+    labels:
+      - traefik.http.routers.zigbee2mqtt.rule=Host(`z2mq.abides.co.uk`)
+      - traefik.http.services.zigbee2mqtt.loadbalancer.server.port=8082
     volumes:
       - ./zigbee2mqtt-data:/app/data
       - /run/udev:/run/udev:ro
-    ports:
-      - 8082:8082
+    # ports:
+    #  - 8082:8082
     environment:
       - TZ=Europe/London
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
+    networks:
+      z2m:
+      traefik_traefik:
+
+networks:
+  z2m:
+    name: z2m
+
+  traefik_traefik:
+    external: true
