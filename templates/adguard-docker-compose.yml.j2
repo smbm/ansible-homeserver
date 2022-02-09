@@ -11,26 +11,19 @@ services:
       - ./adguard-conf:/opt/adguardhome/conf
     restart: unless-stopped
     ports:
-      - 5300:53/tcp
-      - 5300:53/udp
+      - 53:53/tcp
+      - 53:53/udp
       - 3000:3000/tcp
 #    networks:
-#      traefik_traefik:
-#
-#
+#      adguard:
+#        ipv4_address: 10.10.10.231
+
 #networks:
-#  traefik_traefik:
-#    external: true
-#       adguard:
-#         ipv4_address: 10.10.10.231
-#
-# networks:
-#   adguard:
-#     driver: ipvlan
-#     ipam:
-#       config:
-#         - subnet: 10.10.10.0/24
-#           gateway: 10.10.10.1
-#     driver_opts:
-#       ipvlan_mode: "l2"
-#       parent: "eth0"
+#  adguard:
+#    driver: macvlan
+#    ipam:
+#      config:
+#        - subnet: 10.10.10.0/24
+#          gateway: 10.10.10.1
+#    driver_opts:
+#      parent: "eth0"

@@ -62,3 +62,11 @@
     restarted: 'yes'
     services:
       - zigbee2mqtt
+
+- name: restart adguard
+  community.general.docker_compose:
+    project_src: /opt/adguard/
+    state: present
+    restarted: 'yes'
+    services:
+      - adguard

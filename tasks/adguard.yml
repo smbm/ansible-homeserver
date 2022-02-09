@@ -38,15 +38,16 @@
 #   become: yes
 #   when: enable_adguard == 'yes'
 
-# - name: zigbee2mqtt config advanced custom block
-#   ansible.builtin.blockinfile:
-#     path: /opt/zigbee2mqtt/zigbee2mqtt-data/configuration.yaml
-#     insertafter: EOF
-#     block: "{{ zigbee2mqtt_custom_block }}"
-#     state: present
-#   become: yes
-#   notify: restart zigbee2mqtt
-#   when: enable_zigbee2mqtt == 'yes'
+- name: adguard config advanced custom block
+  ansible.builtin.blockinfile:
+    path: /opt/adguard/adguard-conf/AdGuardHome.yaml
+    insertbefore: BOF
+    block: "{{ adguard_custom_block }}"
+    state: present
+    create: yes
+  become: yes
+  notify: restart adguard
+  when: enable_adguard == 'yes'
 
 - name: Copy adguard docker compose file
   template:
