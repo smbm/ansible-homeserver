@@ -1,22 +1,32 @@
 ---
 
 - name: Install certbot with option --classic
-  snap:
+  community.general.snap:
     name:
       - certbot
     classic: yes
     state: present
+    options:
+      - trust-plugin-with-root=ok
   become: yes
-  notify: set plugin containment
+  # notify: set plugin containment
   when: enable_certbot == 'yes'
 
 - name: Flushing handlers
   meta: flush_handlers
 
-- name: Install cloudflare plugin snap
+# - name: Install cloudflare plugin snap
+#   snap:
+#     name:
+#       - certbot-dns-cloudflare
+#     state: present
+#   become: yes
+#   when: enable_certbot == 'yes'
+
+- name: Install digitalOcean plugin snap
   snap:
     name:
-      - certbot-dns-cloudflare
+      - certbot-dns-digitalocean
     state: present
   become: yes
   when: enable_certbot == 'yes'
@@ -39,18 +49,28 @@
     group: "{{ ansible_facts['user_id'] }}"
   when: enable_certbot == 'yes'
 
-- name: create certbot creds file
+# - name: create cloudflare certbot creds file
+#   copy:
+#     dest: "/home/{{ ansible_facts['user_id'] }}/.secrets/certbot/cloudflare.ini"
+#     owner: "{{ ansible_facts['user_id'] }}"
+#     group: "{{ ansible_facts['user_id'] }}"
+#     content: |
+#       dns_cloudflare_api_token = {{ certbot_cloudflare_api_token }}
+#     mode: '0700'
+#   when: enable_certbot == 'yes'
+
+- name: create digitalOcean certbot creds file
   copy:
-    dest: "/home/{{ ansible_facts['user_id'] }}/.secrets/certbot/cloudflare.ini"
+    dest: "/home/{{ ansible_facts['user_id'] }}/.secrets/certbot/digitalocean.ini"
     owner: "{{ ansible_facts['user_id'] }}"
     group: "{{ ansible_facts['user_id'] }}"
     content: |
-      dns_cloudflare_api_token = {{ certbot_cloudflare_api_token }}
+      dns_digitalocean_token = {{ certbot_digitalocean_token }}
     mode: '0700'
   when: enable_certbot == 'yes'
 
 - name: get wildcard cert
-  command: "certbot certonly --dns-cloudflare --dns-cloudflare-credentials /home/{{ ansible_facts['user_id'] }}/.secrets/certbot/cloudflare.ini --quiet --non-interactive --agree-tos --email {{ certbot_cloudflare_email }} -d *.{{ domain }}"
+  command: "certbot certonly --dns-digitalocean --dns-digitalocean-credentials /home/{{ ansible_facts['user_id'] }}/.secrets/certbot/digitalocean.ini --quiet --non-interactive --email {{ certbot_email }} --agree-tos -d *.{{ domain }}"
   become: yes
   args:
     creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
