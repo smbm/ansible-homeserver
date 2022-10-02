@@ -11,6 +11,7 @@ enable_cups: 'yes'
 enable_ruckus: 'yes'
 enable_erx: 'yes'
 enable_adguard: 'yes'
+enable_tailscale: 'yes'
 
 # Docker networking info - these should be set to the IPv4 and IPv6 addresses for your server
 global_ipv4: 10.10.10.230
@@ -22,7 +23,8 @@ domain: domain.tld
 
 # Certbot credentials
 certbot_cloudflare_api_token: <your cloudflare api key for DNS-01>
-certbot_cloudflare_email: your_cloudflare_email@domain.tld
+certbot_email: your_cloudflare_email@domain.tld
+certbot_digitalocean_token: <your digitalocean api key for DNS-01>
 
 # Pihole docker image
 pihole_image: pihole/pihole:2022.01.1

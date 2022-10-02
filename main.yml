@@ -10,12 +10,13 @@
       ping:
 
     - import_tasks: tasks/prereqs.yml
-    - import_tasks: tasks/homebridge.yml
-    - import_tasks: tasks/docker.yml
-    - import_tasks: tasks/certbot.yml
-    - import_tasks: tasks/zigbee2mqtt.yml
-    - import_tasks: tasks/homeassistant.yml
-    - import_tasks: tasks/pihole.yml
-    - import_tasks: tasks/cups.yml
-    - import_tasks: tasks/adguard.yml
-    - import_tasks: tasks/nginx.yml
+    - import_tasks: tasks/tailscale.yml
+    # - import_tasks: tasks/homebridge.yml
+    # - import_tasks: tasks/docker.yml
+    # - import_tasks: tasks/certbot.yml
+    # - import_tasks: tasks/zigbee2mqtt.yml
+    # - import_tasks: tasks/homeassistant.yml
+    # - import_tasks: tasks/pihole.yml
+    # - import_tasks: tasks/cups.yml
+    # - import_tasks: tasks/adguard.yml
+    # - import_tasks: tasks/nginx.yml

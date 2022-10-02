@@ -1,0 +1,24 @@
+---
+
+- name: Install Tailscale GPG key
+  apt_key:
+    url: https://pkgs.tailscale.com/stable/ubuntu/focal.noarmor.gpg
+    state: present
+  become: yes
+  when: enable_tailscale == 'yes'
+
+- name: Add Tailscale repo
+  apt_repository:
+    repo: deb [arch=arm64] https://pkgs.tailscale.com/stable/ubuntu focal main
+    filename: tailscale
+    state: present
+  become: yes
+  when: enable_tailscale == 'yes'
+
+- name: Install Tailscale
+  apt:
+    update_cache: yes
+    name:
+      - tailscale
+  become: yes
+  when: enable_tailscale == 'yes'
