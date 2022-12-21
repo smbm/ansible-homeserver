@@ -6,7 +6,7 @@
     state: directory
     owner: root
     group: root
-  become: yes
+  become: true
   when: enable_adguard == 'yes'
 
 - name: create adguard-conf dir
@@ -15,7 +15,7 @@
     state: directory
     owner: root
     group: root
-  become: yes
+  become: true
   when: enable_adguard == 'yes'
 
 - name: create adguard-work dir
@@ -24,28 +24,18 @@
     state: directory
     owner: root
     group: root
-  become: yes
+  become: true
   when: enable_adguard == 'yes'
 
-# - name: Copy zigbee2mqtt config file
-#   template:
-#     src: zigbee2mqtt-configuration.yaml.j2
-#     dest: /opt/zigbee2mqtt/zigbee2mqtt-data/configuration.yaml
-#     owner: root
-#     group: root
-#     mode: '0644'
-#     force: no
-#   become: yes
-#   when: enable_adguard == 'yes'
-
-- name: adguard config advanced custom block
-  ansible.builtin.blockinfile:
-    path: /opt/adguard/adguard-conf/AdGuardHome.yaml
-    insertbefore: BOF
-    block: "{{ adguard_custom_block }}"
-    state: present
-    create: yes
-  become: yes
+- name: Copy adguard conf file
+  copy:
+    dest: /opt/adguard/adguard-conf/AdGuardHome.yaml
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      {{ adguard_custom_block }}
+  become: true
   notify: restart adguard
   when: enable_adguard == 'yes'
 
@@ -56,7 +46,7 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
   when: enable_adguard == 'yes'
 
 - name: docker compose up adguard
@@ -64,3 +54,31 @@
     project_src: /opt/adguard/
     state: present
   when: enable_adguard == 'yes'
+
+- ansible.builtin.set_fact:
+    dns_lookup_adguard_via_adguard: "{{ lookup('community.general.dig', 'adguard.smbm.xyz', '@{{ ansible_default_ipv4.address }}' )}}"
+    dns_adguard_ipv4: "{{ ansible_default_ipv4.address }}"
+
+# - ansible.builtin.set_fact:
+#     dns_adguard_up_bool: "{{ dns_adguard_ipv4 in dns_lookup_adguard_via_adguard }}"
+
+- name: recreate resolv.conf quad9 plus adguard
+  copy:
+    dest: "/etc/resolv.conf"
+    owner: root
+    group: root
+    content: |
+      nameserver 127.0.0.1
+      nameserver 9.9.9.9
+  become: true
+  when: dns_adguard_ipv4 in dns_lookup_adguard_via_adguard
+
+- name: recreate resolv.conf quad9 without adguard because we could not lookup adguard via adguard
+  copy:
+    dest: "/etc/resolv.conf"
+    owner: root
+    group: root
+    content: |
+      nameserver 9.9.9.9
+  become: true
+  when: dns_adguard_ipv4 not in dns_lookup_adguard_via_adguard

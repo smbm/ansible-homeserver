@@ -1,33 +1,35 @@
 ---
-# Enable services and dependencies
-enable_pihole: 'yes'
-enable_zigbee2mqtt: 'yes'
-enable_homeassistant: 'yes'
-enable_homebridge: 'no'
+# Enable services
+enable_zigbee2mqtt: 'no'
+enable_homeassistant: 'no'
 # To do: NGINX may not work correctly without certbot at this stage due to the conf files having certs listed
 enable_nginx: 'yes'
 enable_certbot: 'yes'
 enable_cups: 'yes'
-enable_ruckus: 'yes'
-enable_erx: 'yes'
 enable_adguard: 'yes'
 enable_tailscale: 'yes'
 
-# Docker networking info - these should be set to the IPv4 and IPv6 addresses for your server
-global_ipv4: 10.10.10.230
-global_ipv6: fd2e::1521
+enable_ruckus_proxy: 'yes'
+enable_erx_proxy: 'yes'
+
+install_bluetooth: 'yes'
+install_docker: 'yes'
+
+# Docker networking info
+global_ipv4: 10.10.10.220
+global_ipv6: fd2e:a775:400f:4b18:dea6:32ff:fe66:1521
 ipv6_prefix_for_docker: fd2e
 
 # Domain for cert and reverse proxying
 domain: domain.tld
 
 # Certbot credentials
-certbot_cloudflare_api_token: <your cloudflare api key for DNS-01>
-certbot_email: your_cloudflare_email@domain.tld
-certbot_digitalocean_token: <your digitalocean api key for DNS-01>
+certbot_email: me@domain.tld
+certbot_digitalocean_token: dop_v1_abcdefghijklmnopqrstuvwxyz1234567890
 
-# Pihole docker image
-pihole_image: pihole/pihole:2022.01.1
+# Tailscale
+tailscale_auth_key: tskey-auth-abcdefghijklmnopqrstuvwxyz1234567890
+tailscale_args: --advertise-exit-node --accept-dns=false --advertise-routes=10.10.10.220/32
 
 # Ruckus IP for the management IF of you WAP
 ruckus_ip: 10.10.10.240
@@ -35,16 +37,22 @@ ruckus_ip: 10.10.10.240
 # ERX IP
 erx_ip: 10.10.10.1
 
-# Adguard
-adguard_image: adguard/adguardhome:v0.107.3
+# Homeassistant
+homeassistant_image: homeassistant/home-assistant:2021.12.9
 
 # Homeassistant config custom block
 homeassistant_custom_block: |
-  # Your custom config goes here
+
+# Zigbee2Mqtt
+zigbee2mqtt_image: koenkk/zigbee2mqtt:1.28.4
+mosquitto_image: eclipse-mosquitto:2.0
 
 # zigbee2mqtt config custom block for advanced flags
 zigbee2mqtt_custom_block: |
-  advanced:
-    network_key: GENERATE
-    pan_id: 6755
-    channel: 11
+
+
+# AdGuard config file
+adguard_docker_image: adguard/adguardhome:v0.107.20
+
+# AdGuard custom block for config file
+adguard_custom_block: |

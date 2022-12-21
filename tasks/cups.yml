@@ -4,10 +4,11 @@
   apt:
     update_cache: yes
     name:
+      - avahi-daemon
       - cups
       - printer-driver-brlaser
     state: present
-  become: yes
+  become: true
   when: enable_cups == 'yes'
 
 - name: Add current user to lpadmin group
@@ -15,7 +16,7 @@
     name: "{{ ansible_facts['user_id'] }}"
     groups: lpadmin
     append: yes
-  become: yes
+  become: true
   when: enable_cups == 'yes'
 
 - name: Copy cupsd conf file
@@ -25,6 +26,6 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
   notify: restart cups
   when: enable_cups == 'yes'

@@ -8,7 +8,7 @@
     state: present
     options:
       - trust-plugin-with-root=ok
-  become: yes
+  become: true
   # notify: set plugin containment
   when: enable_certbot == 'yes'
 
@@ -20,7 +20,7 @@
 #     name:
 #       - certbot-dns-cloudflare
 #     state: present
-#   become: yes
+#   become: true
 #   when: enable_certbot == 'yes'
 
 - name: Install digitalOcean plugin snap
@@ -28,7 +28,7 @@
     name:
       - certbot-dns-digitalocean
     state: present
-  become: yes
+  become: true
   when: enable_certbot == 'yes'
 
 - name: Symlink certbot
@@ -38,7 +38,7 @@
     owner: root
     group: root
     state: link
-  become: yes
+  become: true
   when: enable_certbot == 'yes'
 
 - name: create secrets dir
@@ -71,7 +71,7 @@
 
 - name: get wildcard cert
   command: "certbot certonly --dns-digitalocean --dns-digitalocean-credentials /home/{{ ansible_facts['user_id'] }}/.secrets/certbot/digitalocean.ini --quiet --non-interactive --email {{ certbot_email }} --agree-tos -d *.{{ domain }}"
-  become: yes
+  become: true
   args:
     creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
   when: enable_certbot == 'yes'

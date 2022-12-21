@@ -1,19 +1,19 @@
 ---
 
-- name: Install Docker GPG key
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-  become: yes
-  when: enable_pihole == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes'
+- name: Get Docker GPG key
+  get_url:
+    url:  https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/trusted.gpg.d/docker.asc
+  become: true
+  when: install_docker == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes' or enable_adguard == 'yes'
 
 - name: Add Docker repo
   apt_repository:
-    repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu focal stable
+    repo: deb [signed-by=/etc/apt/trusted.gpg.d/docker.asc] https://download.docker.com/linux/ubuntu jammy stable
     filename: docker
     state: present
-  become: yes
-  when: enable_pihole == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes'
+  become: true
+  when: install_docker == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes' or enable_adguard == 'yes'
 
 - name: Install Docker
   apt:
@@ -22,16 +22,17 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
-  become: yes
-  when: enable_pihole == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes'
+      - docker-compose-plugin
+  become: true
+  when: install_docker == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes' or enable_adguard == 'yes'
 
 - name: Add current user to docker group
   user:
     name: "{{ ansible_facts['user_id'] }}"
     groups: docker
     append: yes
-  become: yes
-  when: enable_pihole == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes'
+  become: true
+  when: install_docker == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes' or enable_adguard == 'yes'
 
 - name: create docker daemon.json
   copy:
@@ -41,12 +42,12 @@
     content: |
       {
         "ipv6": true,
-        "fixed-cidr-v6": "{{ ipv6_prefix_for_docker }}:40ed::/64"
+        "fixed-cidr-v6": "{{ ipv6_prefix_for_docker }}:40ee::/64"
       }
-  become: yes
+  become: true
   notify:
     - restart docker
-  when: enable_pihole == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes'
+  when: install_docker == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes' or enable_adguard == 'yes'
 
 - name: Flushing handlers
   meta: flush_handlers
@@ -57,4 +58,4 @@
   pip:
     name:
       docker-compose
-  when: enable_pihole == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes'
+  when: install_docker == 'yes' or enable_homeassistant == 'yes' or enable_zigbee2mqtt == 'yes' or enable_adguard == 'yes'

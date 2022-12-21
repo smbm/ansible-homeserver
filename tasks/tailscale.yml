@@ -1,18 +1,18 @@
 ---
 
 - name: Install Tailscale GPG key
-  apt_key:
-    url: https://pkgs.tailscale.com/stable/ubuntu/focal.noarmor.gpg
-    state: present
-  become: yes
+  get_url:
+    url:  https://pkgs.tailscale.com/stable/ubuntu/jammy.noarmor.gpg
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+  become: true
   when: enable_tailscale == 'yes'
 
 - name: Add Tailscale repo
   apt_repository:
-    repo: deb [arch=arm64] https://pkgs.tailscale.com/stable/ubuntu focal main
+    repo: deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu jammy main
     filename: tailscale
     state: present
-  become: yes
+  become: true
   when: enable_tailscale == 'yes'
 
 - name: Install Tailscale
@@ -20,5 +20,37 @@
     update_cache: yes
     name:
       - tailscale
-  become: yes
+  become: true
   when: enable_tailscale == 'yes'
+
+- name: Check if Tailscale is connected
+  ansible.builtin.command: tailscale status
+  changed_when: false
+  register: tailscale_status
+  ignore_errors: true
+
+- name: Log in and bring Tailscale Up
+  become: true
+  ansible.builtin.command: tailscale up {{ tailscale_args | trim }} --authkey={{ tailscale_auth_key }}
+  # Since the auth key is included in this task's output, we do not want to log output
+  # no_log: "{{ not (insecurely_log_authkey | bool) }}"
+  register: tailscale_start
+  # If a failure occurred due to state changes, we still want to log a redacted version of the error if "no_log" is true
+  ignore_errors: true
+  when: "'Logged out.' in tailscale_status.stdout"
+  notify: Confirm Tailscale is Connected
+  async: 60
+  poll: 5
+
+- name: Bring Tailscale back Up
+  become: true
+  ansible.builtin.command: tailscale up {{ tailscale_args | trim }}
+  # Since the auth key is included in this task's output, we do not want to log output
+  # no_log: "{{ not (insecurely_log_authkey | bool) }}"
+  register: tailscale_start
+  # If a failure occurred due to state changes, we still want to log a redacted version of the error if "no_log" is true
+  ignore_errors: true
+  when: "'Tailscale is stopped.' in tailscale_status.stdout"
+  notify: Confirm Tailscale is Connected
+  async: 60
+  poll: 5

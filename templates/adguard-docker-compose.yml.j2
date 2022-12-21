@@ -2,10 +2,7 @@ version: '3.8'
 services:
   adguard:
     container_name: adguard
-    image: adguard/adguardhome:v0.107.3
-    labels:
-      - traefik.http.routers.adguard.rule=Host(`adg.abides.co.uk`)
-      - traefik.http.services.adguard.loadbalancer.server.port=3000
+    image: {{ adguard_docker_image }}
     volumes:
       - ./adguard-work:/opt/adguardhome/work
       - ./adguard-conf:/opt/adguardhome/conf

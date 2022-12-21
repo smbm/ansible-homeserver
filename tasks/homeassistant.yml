@@ -6,7 +6,7 @@
     state: directory
     owner: root
     group: root
-  become: yes
+  become: true
   when: enable_homeassistant == 'yes'
 
 - name: create homeassistant-data dir
@@ -15,7 +15,17 @@
     state: directory
     owner: root
     group: root
-  become: yes
+  become: true
+  when: enable_homeassistant == 'yes'
+
+- name: Copy homeassistant docker compose file
+  template:
+    src: homeassistant-docker-compose.yml.j2
+    dest: /opt/homeassistant/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
   when: enable_homeassistant == 'yes'
 
 - name: Copy homeassistant config file
@@ -26,7 +36,7 @@
     group: root
     mode: '0644'
     force: no
-  become: yes
+  become: true
   when: enable_homeassistant == 'yes'
 
 - name: homeassistant config custom block
@@ -35,22 +45,12 @@
     insertafter: EOF
     block: "{{ homeassistant_custom_block }}"
     state: present
-  become: yes
+  become: true
   notify: restart homeassistant
   when: enable_homeassistant == 'yes'
 
 - name: Flushing handlers
   meta: flush_handlers
-
-- name: Copy homeassistant docker compose file
-  template:
-    src: homeassistant-docker-compose.yml.j2
-    dest: /opt/homeassistant/docker-compose.yml
-    owner: root
-    group: root
-    mode: '0644'
-  become: yes
-  when: enable_homeassistant == 'yes'
 
 - name: docker compose up homeassistant
   community.general.docker_compose:

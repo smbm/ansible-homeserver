@@ -1,43 +1,48 @@
 ---
 
+- name: reboot
+  ansible.builtin.reboot:
+    msg: "Rebooting triggered by Ansible"
+  become: true
+
 - name: unlink resolv dot conf
   file:
     path: "/etc/resolv.conf"
     state: absent
-  become: yes
+  become: true
   notify:
-    - recreate resolv.conf
+    - recreate resolv.conf quad9
 
-- name: recreate resolv.conf
+- name: recreate resolv.conf quad9
   copy:
     dest: "/etc/resolv.conf"
     owner: root
     group: root
     content: |
-      nameserver 1.1.1.1
-  become: yes
+      nameserver 9.9.9.9
+  become: true
 
 - name: restart docker
   systemd:
     name: docker.service
     state: restarted
-  become: yes
+  become: true
 
 - name: restart cups
   systemd:
     name: cups.service
     state: restarted
-  become: yes
+  become: true
 
 - name: set cerbot plugin containment
   command: snap set certbot trust-plugin-with-root=ok
-  become: yes
+  become: true
 
 - name: reload nginx
   systemd:
     name: nginx.service
     state: reloaded
-  become: yes
+  become: true
 
 - name: restart pihole
   community.general.docker_compose:
@@ -70,3 +75,15 @@
     restarted: 'yes'
     services:
       - adguard
+
+- name: Tailscale Status
+  listen: Confirm Tailscale is Connected
+  ansible.builtin.command: tailscale status
+  register: handlers_tailscale_status
+
+- name: Assert Tailscale is Connected
+  listen: Confirm Tailscale is Connected
+  ansible.builtin.assert:
+    that:
+      - handlers_tailscale_status.stdout | length != 0
+      - handlers_tailscale_status.stdout is not match('\[L\+V9o\]')

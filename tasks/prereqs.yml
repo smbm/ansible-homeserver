@@ -10,28 +10,26 @@
       - gnupg-agent
       - curl
       - software-properties-common
-      - nginx
-      - avahi-daemon
       - gcc
       - g++
       - make
-      - python
+      - python3
       - net-tools
     state: present
-  become: yes
+  become: true
 
 - name: Apt install bluetooth deps (will reboot afterwards if changes are made)
   apt:
     update_cache: yes
     name:
-      - pi-bluetooth
       - bluetooth
       - bluez
       - libbluetooth-dev
       - libudev-dev
     state: present
-  become: yes
+  become: true
   notify: reboot
+  when: install_bluetooth == 'yes'
 
 - name: Flushing handlers
   meta: flush_handlers
@@ -41,7 +39,7 @@
     name: systemd-resolved
     state: stopped
     enabled: no
-  become: yes
+  become: true
   notify:
     - unlink resolv dot conf
 
@@ -52,4 +50,4 @@
   lineinfile:
     path: /etc/hosts
     line: 127.0.0.1 {{ ansible_facts['hostname'] }}
-  become: yes
+  become: true

@@ -1,58 +1,21 @@
 ---
+- name: install nginx
+  apt:
+    update_cache: yes
+    name:
+      - nginx
+    state: present
+  become: true
+  when: enable_nginx == 'yes' and enable_certbot == 'yes'
 
 - name: unlink nginx default
   file:
     path: "/etc/nginx/sites-enabled/default"
     state: absent
-  become: yes
+  become: true
   notify:
     - reload nginx
   when: enable_nginx == 'yes' and enable_certbot == 'yes'
-
-- name: Copy pihole nginx conf file
-  template:
-    src: pihole-nginx-conf.j2
-    dest: /etc/nginx/sites-available/pihole
-    owner: root
-    group: root
-    mode: '0644'
-  become: yes
-  notify: reload nginx
-  when: enable_pihole == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
-
-- name: Symlink pihole nginx conf
-  file:
-    src: /etc/nginx/sites-available/pihole
-    dest: /etc/nginx/sites-enabled/pihole
-    owner: root
-    group: root
-    state: link
-  become: yes
-  notify: reload nginx
-  when: enable_pihole == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
-
-- name: Copy homebridge nginx conf file
-  template:
-    src: homebridge-nginx-conf.j2
-    dest: /etc/nginx/sites-available/homebridge
-    owner: root
-    group: root
-    mode: '0644'
-  become: yes
-  notify: reload nginx
-  when: enable_homebridge == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
-
-
-- name: Symlink homebridge nginx conf
-  file:
-    src: /etc/nginx/sites-available/homebridge
-    dest: /etc/nginx/sites-enabled/homebridge
-    owner: root
-    group: root
-    state: link
-  become: yes
-  notify: reload nginx
-  when: enable_homebridge == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
 - name: Copy ruckus nginx conf file
   template:
@@ -61,9 +24,9 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
   notify: reload nginx
-  when: enable_ruckus == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
+  when: enable_ruckus_proxy == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
 - name: Symlink ruckus nginx conf
   file:
@@ -72,9 +35,9 @@
     owner: root
     group: root
     state: link
-  become: yes
+  become: true
   notify: reload nginx
-  when: enable_ruckus == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
+  when: enable_ruckus_proxy == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
 - name: Copy cups nginx conf file
   template:
@@ -83,7 +46,7 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
   notify: reload nginx
   when: enable_cups == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
@@ -94,7 +57,7 @@
     owner: root
     group: root
     state: link
-  become: yes
+  become: true
   notify: reload nginx
   when: enable_cups == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
@@ -105,7 +68,7 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
   notify: reload nginx
   when: enable_zigbee2mqtt == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
@@ -116,7 +79,7 @@
     owner: root
     group: root
     state: link
-  become: yes
+  become: true
   notify: reload nginx
   when: enable_zigbee2mqtt == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
@@ -127,7 +90,7 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
   notify: reload nginx
   when: enable_homeassistant == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
@@ -138,7 +101,7 @@
     owner: root
     group: root
     state: link
-  become: yes
+  become: true
   notify: reload nginx
   when: enable_homeassistant == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
@@ -149,9 +112,9 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
   notify: reload nginx
-  when: enable_erx == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
+  when: enable_erx_proxy == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
 - name: Symlink erx nginx conf
   file:
@@ -160,9 +123,9 @@
     owner: root
     group: root
     state: link
-  become: yes
+  become: true
   notify: reload nginx
-  when: enable_erx == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
+  when: enable_erx_proxy == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
 - name: Copy adguard nginx conf file
   template:
@@ -171,7 +134,7 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
   notify: reload nginx
   when: enable_adguard == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
@@ -182,7 +145,7 @@
     owner: root
     group: root
     state: link
-  become: yes
+  become: true
   notify: reload nginx
   when: enable_adguard == 'yes' and enable_nginx == 'yes' and enable_certbot == 'yes'
 
