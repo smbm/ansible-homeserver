@@ -56,7 +56,7 @@
   when: enable_adguard == 'yes'
 
 - ansible.builtin.set_fact:
-    dns_lookup_adguard_via_adguard: "{{ lookup('community.general.dig', 'adguard.smbm.xyz', '@{{ ansible_default_ipv4.address }}' )}}"
+    dns_lookup_adguard_via_adguard: "{{ lookup('community.general.dig', 'adguard.{{ domain }}', '@{{ ansible_default_ipv4.address }}' )}}"
     dns_adguard_ipv4: "{{ ansible_default_ipv4.address }}"
 
 # - ansible.builtin.set_fact:
